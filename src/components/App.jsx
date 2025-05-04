@@ -1,8 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-
-import { addContact, deleteContact } from "../components/redux/contactsSlice";
-import { setFilter } from "../components/redux/filtersSlice";
+import { useGetContactsQuery, useAddContactMutation, useDeleteContactMutation} from "./redux/contactsApi";
+import { setFilter } from "./redux/filtersSlice";
 
 import ContactForm from "./ContactForm/ContactForm";
 import ContactList from "./ContactList/ContactList";
@@ -12,40 +11,35 @@ import style from "./App.module.css";
 
 function App() {
   const dispatch = useDispatch();
-  const contacts = useSelector((state) => state.contacts.items);
   const filter = useSelector((state) => state.filters.filter);
 
-  const handleAddContact = (name, number) => {
-    if (name === "" || number === "") return;
+  const { data: contacts = [], isLoading, isError } = useGetContactsQuery();
+  const [addContact] = useAddContactMutation();
+  const [deleteContact] = useDeleteContactMutation();
 
-    const nameExists = contacts.some(
-      (contact) => contact.name.trim().toLowerCase() === name.toLowerCase()
+  const handleAddContact = async (name, phone) => {
+    if (!name || !phone) return;
+    const exists = contacts.some(
+      (contact) => contact.name.toLowerCase() === name.toLowerCase()
     );
-
-    if (nameExists) {
+    if (exists) {
       alert(`${name} is already in contacts.`);
       return;
     }
-
-    dispatch(addContact(name, number));
+    await addContact({ name, phone });
   };
 
-  const handleDeleteContact = (id) => {
-    dispatch(deleteContact(id));
+  const handleDeleteContact = async (id) => {
+    await deleteContact(id);
   };
 
-  const handleFilterChange = (event) => {
-    dispatch(setFilter(event.target.value));
+  const handleFilterChange = (e) => {
+    dispatch(setFilter(e.target.value));
   };
 
-  const getVisibleContacts = () => {
-    const normalizedFilter = filter.toLowerCase();
-    return contacts.filter((contact) =>
-      contact.name.toLowerCase().includes(normalizedFilter)
-    );
-  };
-
-  const filteredContacts = getVisibleContacts();
+  const filteredContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
     <div className={style.container}>
@@ -53,7 +47,11 @@ function App() {
       <ContactForm onAddContact={handleAddContact} />
       <h2 className={style.subtitle}>Contacts</h2>
       <SearchContact value={filter} onFilterChange={handleFilterChange} />
-      <ContactList contacts={filteredContacts} onDelete={handleDeleteContact} />
+      {isLoading && <p>Loading contacts...</p>}
+      {isError && <p>Error fetching contacts.</p>}
+      {!isLoading && (
+        <ContactList contacts={filteredContacts} onDelete={handleDeleteContact} />
+      )}
     </div>
   );
 }

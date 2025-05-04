@@ -3,19 +3,19 @@ import style from "./ContactForm.module.css";
 
 function ContactForm({ onAddContact }) {
   const [name, setName] = useState("");
-  const [number, setNumber] = useState("");
+  const [phone, setPhone] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     if (name === "name") setName(value);
-    else if (name === "number") setNumber(value);
+    else if (name === "phone") setPhone(value);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onAddContact(name.trim(), number.trim());
+    onAddContact(name.trim(), phone.trim());
     setName("");
-    setNumber("");
+    setPhone("");
   };
 
   return (
@@ -34,12 +34,12 @@ function ContactForm({ onAddContact }) {
         />
       </label>
       <label className={style.contactFormLabel}>
-        Number
+        Phone
         <input
           className={style.contactFormInput}
           type="tel"
-          name="number"
-          value={number}
+          name="phone"
+          value={phone}
           onChange={handleChange}
           pattern="\+?\d{1,4}?[ .-]?\(?\d{1,3}?\)?[ .-]?\d{1,4}[ .-]?\d{1,4}[ .-]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
